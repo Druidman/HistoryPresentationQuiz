@@ -9,6 +9,8 @@ export interface DbOption {
 export interface DbQuestion {
   id: string;
   question: string;
+  /** Max time for the question, in seconds. */
+  duration: number;
   created_at: string;
   options: DbOption[] | null;
 }

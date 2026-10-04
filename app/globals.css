@@ -55,6 +55,19 @@ body {
   animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
+@keyframes pulse-urgent {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+.pulse-urgent {
+  animation: pulse-urgent 1s ease-in-out infinite;
+}
+
 @keyframes float-squiggle {
   0%,
   100% {

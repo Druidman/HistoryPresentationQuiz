@@ -16,7 +16,8 @@ begin
       "Robert Schuman i Konrad Adenauer",
       "Alcide de Gasperi i Winston Churchill",
       "Charles de Gaulle i Konrad Adenauer"
-    ]
+    ],
+    "duration": 15
   },
   {
     "question": "Jakie trzy państwa utworzyły Beneluks?",
@@ -25,7 +26,8 @@ begin
       "Belgia, Francja i Luksemburg",
       "Holandia, Niemcy i Belgia",
       "Luksemburg, Włochy i Holandia"
-    ]
+    ],
+    "duration": 15
   },
   {
     "question": "W którym roku powstała Rada Europy i z czyjej inicjatywy?",
@@ -34,7 +36,8 @@ begin
       "1951 r.; Schuman, Adenauer, de Gasperi",
       "1949 r.; Monnet, de Gaulle, Churchill",
       "1957 r.; Monnet, Adenauer, de Gasperi"
-    ]
+    ],
+    "duration": 15
   },
   {
     "question": "Na mocy jakiego traktatu i kiedy powołano Europejską Wspólnotę Węgla i Stali?",
@@ -43,7 +46,8 @@ begin
       "Traktat rzymski, 25 marca 1957 r.",
       "Traktat paryski, 25 marca 1957 r.",
       "Traktat rzymski, 18 kwietnia 1951 r."
-    ]
+    ],
+    "duration": 15
   },
   {
     "question": "Co powstało na mocy traktatów rzymskich z 1957 r.?",
@@ -52,7 +56,8 @@ begin
       "EWWiS i EFTA",
       "OEEC i Rada Europy",
       "EFTA i OECD"
-    ]
+    ],
+    "duration": 15
   },
   {
     "question": "Która z poniższych zmian NIE była wynikiem Soboru Watykańskiego II?",
@@ -61,7 +66,8 @@ begin
       "Msza w językach narodowych odprawiana przodem do ludzi",
       "Zniesienie indeksu ksiąg zakazanych",
       "Zniesienie ekskomunik z 1054 r. między Kościołem rzymskim a prawosławnym"
-    ]
+    ],
+    "duration": 20
   },
   {
     "question": "Jaką metodę walki stosował Martin Luther King i co osiągnięto do 1964 r.?",
@@ -70,7 +76,8 @@ begin
       "Walka zbrojna; ustawa o równości obywateli i Pokojowa Nagroda Nobla",
       "Bierny opór; likwidacja Ku-Klux-Klanu i Nagroda Nobla w dziedzinie literatury",
       "Strajki generalne; ustawa o równości obywateli i Order Orła Białego"
-    ]
+    ],
+    "duration": 30
   },
   {
     "question": "Czym charakteryzowały się państwa dobrobytu w powojennej Europie Zachodniej?",
@@ -79,7 +86,8 @@ begin
       "Gospodarką centralnie planowaną i zakazem związków zawodowych",
       "Pełną prywatyzacją przemysłu bez pomocy socjalnej",
       "Likwidacją własności prywatnej"
-    ]
+    ],
+    "duration": 20
   },
   {
     "question": "Jakie zjawisko związane jest bezpośrednio z wprowadzeniem pigułki antykoncepcyjnej w 1960 r.?",
@@ -88,7 +96,8 @@ begin
       "Marsz na Waszyngton",
       "Powstanie EWG",
       "Zniesienie indeksu ksiąg zakazanych"
-    ]
+    ],
+    "duration": 20
   },
   {
     "question": "Kim była Betty Friedan?",
@@ -97,13 +106,14 @@ begin
       "Pierwszą kobietą premierem Wielkiej Brytanii",
       "Liderką ruchu hipisowskiego",
       "Autorką ustawy o równości obywateli USA"
-    ]
+    ],
+    "duration": 20
   }
 ]
     $json$::jsonb)
   loop
-    insert into public.questions (question)
-    values (item->>'question')
+    insert into public.questions (question, duration)
+    values (item->>'question', coalesce((item->>'duration')::int, 20))
     returning id into qid;
 
     for opt, ord in

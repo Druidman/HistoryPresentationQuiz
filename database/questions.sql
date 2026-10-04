@@ -3,6 +3,7 @@
 create table questions (
   id uuid not null default gen_random_uuid(),
   question text not null,
+  duration integer not null, -- in seconds
   created_at timestamptz not null default now(),
 
   -- correct answer is in correct_answers
