@@ -11,7 +11,7 @@ export function ThankYouCard() {
       <div className="relative">
         <OrangeDot className="absolute -left-16 -top-6 h-10 w-10 max-sm:hidden" />
         <h1 className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
-          Dziękuję<i className="not-italic">*</i> <Wavy>za</Wavy> <Wavy>odpowiedzi</Wavy>!
+          <Wavy>Szacuneczek</Wavy> <Wavy>za</Wavy> <Wavy>odpowiedzi</Wavy>!
         </h1>
       </div>
 
@@ -24,7 +24,7 @@ export function ThankYouCard() {
         </p>
       </div>
 
-      <p className="mt-8 text-sm text-cocoa/55">*i miłego dnia!</p>
+      <p className="mt-8 text-sm text-cocoa/55">💀💀Jutro sprawdzian z matmy...💀💀</p>
     </section>
   );
 }

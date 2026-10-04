@@ -28,7 +28,7 @@ export function JoinCard({ onStart }: { onStart: (nickname: string) => Promise<v
 
       <h1 className="relative mb-6 text-center text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
         <OrangeDot className="absolute -left-9 top-2 h-8 w-8 max-sm:hidden" />
-        Szybki <Wavy>quiz</Wavy>
+        Skibidi <Wavy>quiz</Wavy>
       </h1>
 
       <form
@@ -39,7 +39,7 @@ export function JoinCard({ onStart }: { onStart: (nickname: string) => Promise<v
           Twój <Wavy>nick</Wavy>
         </label>
         <p className="mb-4 text-sm text-cocoa/70">
-          Potrzebny tylko do podpisania Twoich odpowiedzi — bez rejestracji i haseł.
+          Tak żebym ciebie mógł rozpoznać bo Pan będzie chciał odpowiedzi
         </p>
 
         <input
@@ -68,7 +68,7 @@ export function JoinCard({ onStart }: { onStart: (nickname: string) => Promise<v
       </form>
 
       <p className="mt-5 text-center text-xs text-cocoa/60">
-        10 pytań · jeden wybór na pytanie · nie da się wrócić do poprzednich
+        10 pytań · Uważaj na czas · nie da się wrócić do poprzednich
       </p>
     </section>
   );
