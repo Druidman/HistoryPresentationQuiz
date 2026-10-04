@@ -8,6 +8,10 @@
 
 ## Requirements
 ### Ui
+Should be a 3 component one:
+- Anonymous Account/Profile creation
+- Quiz solving
+- Thank you screen
 Looks and feels like one from reference screenshot [Reference.png] :
 - cozy style with that creamy color
 - !! Dotted background !!
@@ -33,7 +37,8 @@ from it in designated table. It is important that you store (if possible) as muc
 4. Finish
 
 
-
-
+### Important
+- supabase-js is installed and envs are in .env already setup
+- For your reference questions are also in json [questions.json] BUT DON'T USE THOSE IN APP YOU NEED TO FETCH THEM FROM DB 
 
 
