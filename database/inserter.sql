@@ -91,13 +91,9 @@ begin
   },
   {
     "question": "Jakie zjawisko związane jest bezpośrednio z wprowadzeniem pigułki antykoncepcyjnej w 1960 r.?",
-    "options": [
-      "Rewolucja seksualna",
-      "Marsz na Waszyngton",
-      "Powstanie EWG",
-      "Zniesienie indeksu ksiąg zakazanych"
-    ],
-    "duration": 20
+    "options": [],
+    "open_model": "Rewolucja seksualna",
+    "duration": 50
   },
   {
     "question": "Kim była Betty Friedan?",
@@ -116,6 +112,12 @@ begin
     values (item->>'question', coalesce((item->>'duration')::int, 20))
     returning id into qid;
 
+    -- open question: key goes straight to correct_answers, no options
+    if item->>'open_model' is not null then
+      insert into public.correct_answers (question_id, correct_option_model)
+      values (qid, item->>'open_model');
+    end if;
+
     for opt, ord in
       select value, ordinality
       from jsonb_array_elements_text(item->'options') with ordinality
@@ -124,7 +126,7 @@ begin
       values (qid, opt)
       returning id into oid;
 
-      if ord = 1 then  -- pierwsza opcja = poprawna
+      if ord = 1 then  -- first option = correct
         insert into public.correct_answers (question_id, correct_option_id)
         values (qid, oid);
       end if;
