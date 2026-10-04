@@ -31,5 +31,16 @@ export interface UserAnswerRow {
   created_at: string;
 }
 
-/** map: question_id -> chosen option_id */
-export type Selections = Record<string, string>;
+/** One buffered answer: a picked option id, or free text for an open question. */
+export type Selection =
+  | { kind: "option"; optionId: string }
+  | { kind: "custom"; text: string };
+
+/** map: question_id -> selection */
+export type Selections = Record<string, Selection>;
+
+/** Whitespace-only custom text does not count as an answer. */
+export function isAnswered(selection: Selection | undefined): boolean {
+  if (!selection) return false;
+  return selection.kind === "option" || selection.text.trim().length > 0;
+}

@@ -44,7 +44,11 @@ export function QuizFlow() {
         .order("created_at", { ascending: true });
       if (questionsError) throw questionsError;
 
-      const fetched = (data ?? []).filter((q) => Array.isArray(q.options) && q.options.length > 0);
+      // Questions without options are open questions — keep them. Only drop
+      // malformed rows (missing id/question text).
+      const fetched = (data ?? []).filter(
+        (q) => typeof q.id === "string" && typeof q.question === "string" && q.question.length > 0,
+      );
       if (fetched.length === 0) {
         throw new Error("Nie znaleziono pytań w bazie. Skontaktuj się z prowadzącym.");
       }
@@ -71,11 +75,25 @@ export function QuizFlow() {
       const uid = (await supabase.auth.getUser()).data.user?.id;
       if (!uid) throw new Error("Sesja wygasła. Odśwież stronę i spróbuj ponownie.");
 
-      const rows = Object.entries(selections).map(([questionId, optionId]) => ({
-        user_id: uid,
-        question_id: questionId,
-        option_id: optionId,
-      }));
+      type AnswerRow = {
+        user_id: string;
+        question_id: string;
+        option_id?: string;
+        custom_option_model?: string;
+      };
+      const rows: AnswerRow[] = Object.entries(selections).flatMap(
+        ([questionId, selection]): AnswerRow[] => {
+          if (selection.kind === "option") {
+            return [{ user_id: uid, question_id: questionId, option_id: selection.optionId }];
+          }
+          // Timer expiry can sweep past an open question with whitespace-only text —
+          // don't insert an empty custom answer.
+          const text = selection.text.trim();
+          return text.length > 0
+            ? [{ user_id: uid, question_id: questionId, custom_option_model: text }]
+            : [];
+        },
+      );
       if (rows.length === 0) throw new Error("Brak odpowiedzi do wysłania.");
 
       const { error: insertError } = await supabase.from("user_answers").insert(rows);

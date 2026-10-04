@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { DbQuestion, Selections } from "@/lib/types";
+import type { DbQuestion, Selection, Selections } from "@/lib/types";
+import { isAnswered } from "@/lib/types";
 import { Connector, OrangeDot } from "@/components/decor";
 
 /** Fallback when a question row somehow lacks a usable duration (seconds). */
 const FALLBACK_DURATION_SEC = 30;
 /** Remaining time below which the countdown pill turns red and pulses. */
 const URGENT_SECONDS = 5;
+/** Max length of an open-question answer (textarea also enforces it). */
+const CUSTOM_MAX_LEN = 1000;
 
 function durationOf(question: DbQuestion | undefined): number {
   const raw = question?.duration;
@@ -16,11 +19,18 @@ function durationOf(question: DbQuestion | undefined): number {
     : FALLBACK_DURATION_SEC;
 }
 
+/** No options (or a malformed options payload) means it's an open question. */
+function isOpenQuestion(question: DbQuestion | undefined): boolean {
+  return !Array.isArray(question?.options) || question.options.length === 0;
+}
+
 /**
  * Stage 2: one question at a time, forward-only. Each question has its own
  * countdown (`duration` seconds from the questions table) — expiry auto-advances,
- * or auto-submits on the last question. Answers stay changeable while the
- * question is on screen and are batch-inserted into user_answers on submit.
+ * or auto-submits on the last question. Closed questions are answered with
+ * option buttons; open questions (no options in the DB) with a free-text area.
+ * Answers stay changeable while the question is on screen and are
+ * batch-inserted into user_answers on submit.
  */
 export function QuizCard({
   questions,
@@ -38,10 +48,17 @@ export function QuizCard({
   const question = questions[index];
   const durationSec = durationOf(question);
   const isLast = index === questions.length - 1;
-  const answeredCount = Object.keys(selections).length;
+  const open = isOpenQuestion(question);
+  const answeredCount = Object.values(selections).filter(isAnswered).length;
   const urgent = secondsLeft <= URGENT_SECONDS;
 
   const selectionForQuestion = question ? selections[question.id] : undefined;
+  const answeredForQuestion = isAnswered(selectionForQuestion);
+  const customText = !open
+    ? ""
+    : selectionForQuestion?.kind === "custom"
+      ? selectionForQuestion.text
+      : "";
 
   // Reset the countdown whenever the question changes. Done during render (the
   // React-documented "adjust state on prop change" pattern) instead of inside the
@@ -80,7 +97,18 @@ export function QuizCard({
   // Selecting again simply overwrites — the choice stays editable until submit.
   const choose = useCallback(
     (optionId: string) => {
-      setSelections((prev) => ({ ...prev, [question.id]: optionId }));
+      const selection: Selection = { kind: "option", optionId };
+      setSelections((prev) => ({ ...prev, [question.id]: selection }));
+    },
+    [question.id],
+  );
+
+  // Open question: every keystroke overwrites the buffered answer. Whitespace is
+  // trimmed (and empties dropped) when the rows are built for the insert.
+  const chooseCustom = useCallback(
+    (text: string) => {
+      const selection: Selection = { kind: "custom", text };
+      setSelections((prev) => ({ ...prev, [question.id]: selection }));
     },
     [question.id],
   );
@@ -130,7 +158,7 @@ export function QuizCard({
         <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-ink/15">
           <div
             className="h-full rounded-full bg-ink transition-all duration-300"
-            style={{ width: `${((index + (selectionForQuestion ? 1 : 0)) / questions.length) * 100}%` }}
+            style={{ width: `${((index + (answeredForQuestion ? 1 : 0)) / questions.length) * 100}%` }}
           />
         </div>
         <span className="text-sm font-semibold tabular-nums text-ink-soft">
@@ -164,34 +192,56 @@ export function QuizCard({
           {question.question}
         </p>
 
-        <div className="grid gap-2.5">
-          {question.options!.map((option, i) => {
-            const selected = selectionForQuestion === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                disabled={busy}
-                onClick={() => choose(option.id)}
-                aria-pressed={selected}
-                className={`flex w-full items-start gap-3 rounded-2xl border-2 px-4 py-3.5 text-left text-base font-medium transition sm:text-lg ${
-                  selected
-                    ? "border-ink bg-accent text-white shadow-[3px_3px_0_rgba(36,64,110,0.25)]"
-                    : "border-ink/25 bg-cream text-cocoa enabled:hover:-translate-y-0.5 enabled:hover:border-accent enabled:hover:shadow-[3px_3px_0_rgba(242,128,62,0.35)] active:translate-y-0"
-                }`}
-              >
-                <span
-                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${
-                    selected ? "border-white bg-white text-accent" : "border-ink/40 text-ink-soft"
+        {open ? (
+          <div>
+            <label htmlFor={`answer-${question.id}`} className="sr-only">
+              Twoja odpowiedź
+            </label>
+            <textarea
+              id={`answer-${question.id}`}
+              value={customText}
+              onChange={(e) => chooseCustom(e.target.value)}
+              disabled={busy}
+              rows={4}
+              maxLength={CUSTOM_MAX_LEN}
+              placeholder="Wpisz swoją odpowiedź…"
+              className="w-full resize-none rounded-2xl border-2 border-ink/25 bg-cream px-4 py-3.5 text-base font-medium text-cocoa transition placeholder:text-cocoa/40 focus:border-accent focus:shadow-[3px_3px_0_rgba(242,128,62,0.35)] focus:outline-none disabled:opacity-50 sm:text-lg"
+            />
+            <div className="mt-1 text-right text-xs tabular-nums text-cocoa/50">
+              {customText.length}/{CUSTOM_MAX_LEN}
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-2.5">
+            {question.options!.map((option, i) => {
+              const selected =
+                selectionForQuestion?.kind === "option" && selectionForQuestion.optionId === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => choose(option.id)}
+                  aria-pressed={selected}
+                  className={`flex w-full items-start gap-3 rounded-2xl border-2 px-4 py-3.5 text-left text-base font-medium transition sm:text-lg ${
+                    selected
+                      ? "border-ink bg-accent text-white shadow-[3px_3px_0_rgba(36,64,110,0.25)]"
+                      : "border-ink/25 bg-cream text-cocoa enabled:hover:-translate-y-0.5 enabled:hover:border-accent enabled:hover:shadow-[3px_3px_0_rgba(242,128,62,0.35)] active:translate-y-0"
                   }`}
                 >
-                  {String.fromCharCode(65 + i)}
-                </span>
-                <span>{option.option}</span>
-              </button>
-            );
-          })}
-        </div>
+                  <span
+                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                      selected ? "border-white bg-white text-accent" : "border-ink/40 text-ink-soft"
+                    }`}
+                  >
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <span>{option.option}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="mt-5 flex items-center justify-between gap-3">
@@ -211,7 +261,7 @@ export function QuizCard({
         ) : (
           <button
             type="button"
-            disabled={selectionForQuestion === undefined || busy}
+            disabled={!answeredForQuestion || busy}
             onClick={tryAdvance}
             className="flex items-center gap-2 rounded-2xl border-2 border-ink bg-accent px-5 py-3 text-base font-bold text-white transition active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 enabled:hover:bg-accent-deep sm:text-lg"
           >
