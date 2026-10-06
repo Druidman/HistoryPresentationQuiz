@@ -9,6 +9,7 @@
   --color-accent-deep: #e2622b;
   --color-redline: #e2543e;
   --color-cocoa: #33302a;
+  --color-ok: #4a7c59;
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -79,4 +80,87 @@ body {
 }
 .float-squiggle {
   animation: float-squiggle 2.6s ease-in-out infinite;
+}
+
+/* ---------- /results page ---------- */
+
+/* falling confetti behind the results page */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+.confetti-piece {
+  opacity: 0;
+}
+
+/* 3D flip used by the MOCNE KONKRETY reveal cards */
+.flip-scene {
+  perspective: 1000px;
+}
+.flip-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+/* slow diagonal sheen across the two champion cards */
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(340%) skewX(-18deg);
+  }
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0;
+  width: 34%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(247, 239, 221, 0.65),
+    transparent
+  );
+  animation: shimmer-sweep 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* gentle bobbing crown on the champion cards */
+@keyframes crown-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(4deg);
+  }
+}
+.crown-bob {
+  animation: crown-bob 2.2s ease-in-out infinite;
+  display: inline-block;
 }

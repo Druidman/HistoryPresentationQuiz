@@ -1,7 +1,11 @@
 -- making query for it holdon
 select
-  p.nickname,
-  (
+jsonb_build_object(
+  'nickname', p.nickname,
+  'id', p.user_id,
+  'metadata', p.metadata,
+  'registered_at', p.created_at,
+  'answers', (
     select
       jsonb_agg(
         coalesce(
@@ -20,6 +24,7 @@ select
                 when ua.custom_option_model is not null then jsonb_build_object(
                   'answer_format', 'open',
                   'answer_id', ua.id,
+                  'answer', ua.custom_option_model,
                   'is_correct', false, -- not able to verify rn
                   'answered_at', ua.created_at
                 )
@@ -36,5 +41,6 @@ select
         )
       )
     from questions q
-  ) as test_result 
+  ) 
+)
 from profiles p;
